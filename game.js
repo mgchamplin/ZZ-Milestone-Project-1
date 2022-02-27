@@ -1,6 +1,13 @@
+const REMOVE_CARD = 0;
+const TURN_DOWN = 1;
+const TURN_UP = 2;
+const NONE = -1;
+
 let maxCards = 50;
 let cardLocationToID = [100]
-let activeCardIndex = null;
+let cardChoiceAAAIndex = NONE;
+let cardChoiceZZZIndex = NONE;
+
 
 function dealCards(max_cards) {
     console.log("Deal it")
@@ -33,27 +40,82 @@ function resetCards () {
     clearOutCards(maxCards)
 }
 
+function changeCardImage(card, action) {
+
+    switch(action) {
+        case REMOVE_CARD:
+            cardLocationToID[card].element.src = '';
+            break;
+        case TURN_DOWN:
+            cardLocationToID[card].element.src = "assets/card_back.jpg";
+            break;
+        case TURN_UP:
+            cardLocationToID[card].element.src = cardLocationToID[card].img;
+            break;
+        default:
+            console.log("You screwed up")
+            break;
+    }
+}
+
 function clearOutCards(max_cards) {
     console.log("Clearing a total of " + max_cards)
     for (let i=0; i < max_cards; i++) {  console.log("clear " + i)
         cardLocationToID[i].element.remove();
         cardLocationToID[i] = null;
     }
-    activeCardIndex = null;
+    firstCardIndex  = NONE;
+    SecondCardIndex = NONE;
 }
 
-function cardClicked(card) {
-    cardLocationToID[card].element.src = cardLocationToID[card].img;
+function checkForMatch(arrayIndex) {
+   
+    if (cardLocationToID[cardChoiceAAAIndex].element.id === cardLocationToID[cardChoiceZZZIndex].element.id) {
+        console.log("MATCH!")
+        changeCardImage(cardChoiceAAAIndex, REMOVE_CARD);
+        changeCardImage(cardChoiceZZZIndex, REMOVE_CARD);
+        cardChoiceAAAIndex = NONE;
+        cardChoiceZZZIndex = NONE;
+    }
+    else {
+        console.log("WTF")
+    }
+}
 
+function cardClicked(arrayIndex) {
 
-    if (activeCardIndex) {
-        console.log("Curr Card = " + cardLocationToID[card].element.id + " Prev Card = " + cardLocationToID[activeCardIndex].element.id);
+    if (cardChoiceAAAIndex === NONE) {
 
-        if (cardLocationToID[card].element.id === cardLocationToID[activeCardIndex].element.id)
-            console.log("MATCH!")
-        activeCardIndex = null;
-    } else {
-        activeCardIndex = card;
+        if (cardChoiceZZZIndex === NONE) {          // No cards chosen before this, make this card AAA, ZZZ is NONE
+            cardChoiceAAAIndex = arrayIndex;
+
+            changeCardImage(cardChoiceAAAIndex, TURN_UP);
+        } else {                                    // One card is chosen already ZZZ->was.  Make this AAA, check 4 match
+            cardChoiceAAAIndex = arrayIndex;
+
+            changeCardImage(cardChoiceAAAIndex, TURN_UP);
+
+            checkForMatch(arrayIndex)
+        }
+        console.log("Selected Card = " + cardLocationToID[cardChoiceAAAIndex].element.id);
+
+    }
+    else if (cardChoiceZZZIndex === NONE) {         // One card is chosen already AAA->was.  Make this ZZZ, check 4 match
+        cardChoiceZZZIndex = arrayIndex;
+
+        console.log("Selected Card = " + cardLocationToID[cardChoiceZZZIndex].element.id);
+
+        changeCardImage(cardChoiceZZZIndex, TURN_UP);
+
+        checkForMatch(arrayIndex)
+    }
+    else {                                          // Two cards already chosen.  Flip those and keep this one
+            changeCardImage(cardChoiceAAAIndex, TURN_DOWN);
+            changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
+            cardChoiceAAAIndex = arrayIndex;
+            cardChoiceZZZIndex = NONE;
+
+            changeCardImage(cardChoiceAAAIndex, TURN_UP);
     }
 }
 
