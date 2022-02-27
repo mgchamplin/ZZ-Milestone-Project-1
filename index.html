@@ -13,10 +13,23 @@
 
             <h1>Match Game Challenge</h1>
 
-            <div id="card_group" class="card_group_container">
-
+            <div id="control_panel" class="control_panel_container">
+                <button class="deal_cards_button" onclick="dealOutCards()">Deal
+                    Cards</button>
+                <button class="deal_cards_button" onclick="resetCards()">Reset
+                    Game</button>
 
             </div>
+
+            <div id="options_panel" class="options_panel_container">
+                <select id="card_selector" class="card_selection_pulldown">
+                    <option value=20>Select Number of Cards</option>
+                    <option value=20>20 Cards</option>
+                    <option value=50>50 Cards</option>
+                    <option value=100>100 Cards</option>
+                </select>
+            </div>
+            <div id="card_group" class="card_group_container"></div>
 
             <script src="game.js"></script>
         </body>
