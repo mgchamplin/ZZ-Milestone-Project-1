@@ -7,9 +7,11 @@ let maxCards = 50;
 let cardLocationToID = [100]
 let cardChoiceAAAIndex = NONE;
 let cardChoiceZZZIndex = NONE;
+let tableReset = true;
+let numMatches = 0;
 
 
-function dealCards(max_cards) {
+async function dealCards(max_cards) {
     console.log("Deal it")
     for (let i=0; i < max_cards; i++) {
         let card = document.createElement("img");
@@ -22,10 +24,26 @@ function dealCards(max_cards) {
         card.id = `c${card_id}`
         card.className = `card card${card_id}`
 
+        let card_num = Number(maxCards)
+
+        switch(maxCards) {
+            case 10:
+                card.setAttribute("style","width:16%")
+                break;
+            case 20:
+                card.setAttribute("style","width:12%")
+                break;
+            case 50:
+            default:
+                card.setAttribute("style","width:8%")
+        }
+
         card.addEventListener("click",function() {cardClicked(i)})
 
         let div_container = document.getElementById("card_group")
-        div_container.appendChild(card); 
+
+        //await setTimeout(()=>{div_container.appendChild(card)}, 2000); 
+        div_container.appendChild(card);
 
         cardLocationToID[i].element = card;
         cardLocationToID[i].img     = card_image;
@@ -38,6 +56,9 @@ function disappearCard(card_num) {
 
 function resetCards () {
     clearOutCards(maxCards)
+
+    tableReset = true;
+    numMatches = 0;
 }
 
 function changeCardImage(card, action) {
@@ -48,9 +69,11 @@ function changeCardImage(card, action) {
             break;
         case TURN_DOWN:
             cardLocationToID[card].element.src = "assets/card_back.jpg";
+            console.log("TURN DOWN  " + cardLocationToID[card].element.id);
             break;
         case TURN_UP:
             cardLocationToID[card].element.src = cardLocationToID[card].img;
+            console.log("TURN UP  " + cardLocationToID[card].element.id);
             break;
         default:
             console.log("You screwed up")
@@ -64,8 +87,8 @@ function clearOutCards(max_cards) {
         cardLocationToID[i].element.remove();
         cardLocationToID[i] = null;
     }
-    firstCardIndex  = NONE;
-    SecondCardIndex = NONE;
+    cardChoiceAAAIndex  = NONE;
+    cardChoiceZZZIndex = NONE;
 }
 
 function checkForMatch(arrayIndex) {
@@ -76,9 +99,8 @@ function checkForMatch(arrayIndex) {
         changeCardImage(cardChoiceZZZIndex, REMOVE_CARD);
         cardChoiceAAAIndex = NONE;
         cardChoiceZZZIndex = NONE;
-    }
-    else {
-        console.log("WTF")
+
+        numMatches++;
     }
 }
 
@@ -91,37 +113,64 @@ function cardClicked(arrayIndex) {
 
             changeCardImage(cardChoiceAAAIndex, TURN_UP);
         } else {                                    // One card is chosen already ZZZ->was.  Make this AAA, check 4 match
-            cardChoiceAAAIndex = arrayIndex;
+            if (arrayIndex !== cardChoiceZZZIndex){ // Make sure the card wasn't already face up
+                cardChoiceAAAIndex = arrayIndex;
 
-            changeCardImage(cardChoiceAAAIndex, TURN_UP);
-
-            checkForMatch(arrayIndex)
+                changeCardImage(cardChoiceAAAIndex, TURN_UP);
+    
+                checkForMatch(cardChoiceAAAIndex)
+            } else {                                // Same card - Card was face up.  Now we just turn it down
+                changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
+                cardChoiceZZZIndex = NONE;
+            }
         }
-        console.log("Selected Card = " + cardLocationToID[cardChoiceAAAIndex].element.id);
+        if (cardChoiceAAAIndex !== NONE) console.log("Selected Card = " + cardLocationToID[cardChoiceAAAIndex].element.id);
 
     }
     else if (cardChoiceZZZIndex === NONE) {         // One card is chosen already AAA->was.  Make this ZZZ, check 4 match
-        cardChoiceZZZIndex = arrayIndex;
+        if (cardChoiceAAAIndex != arrayIndex) {     // Make sure it doesn't already match a card facing up
+            cardChoiceZZZIndex = arrayIndex;
 
-        console.log("Selected Card = " + cardLocationToID[cardChoiceZZZIndex].element.id);
+            console.log("Selected Card = " + cardLocationToID[cardChoiceZZZIndex].element.id);
 
-        changeCardImage(cardChoiceZZZIndex, TURN_UP);
+            changeCardImage(cardChoiceZZZIndex, TURN_UP);
 
-        checkForMatch(arrayIndex)
-    }
-    else {                                          // Two cards already chosen.  Flip those and keep this one
+            checkForMatch(cardChoiceZZZIndex)
+        } else {                                    // The new selected card matches an up-facing AAA card.  So turn it down
             changeCardImage(cardChoiceAAAIndex, TURN_DOWN);
-            changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
-            cardChoiceAAAIndex = arrayIndex;
-            cardChoiceZZZIndex = NONE;
-
-            changeCardImage(cardChoiceAAAIndex, TURN_UP);
+            cardChoiceAAAIndex = NONE;
+        }
     }
+    else {                                                  // Two cards already chosen.  
+            if (arrayIndex === cardChoiceAAAIndex){         // if AAA was clicked when already face up, clear it
+                changeCardImage(cardChoiceAAAIndex, TURN_DOWN);
+                cardChoiceAAAIndex = NONE;
+
+            } else if (arrayIndex === cardChoiceZZZIndex){  // ELSE IF ZZZ was clicked when already face up, clear it
+                changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
+                cardChoiceZZZIndex = NONE;
+            } else {                                         // ELSE neither click, so clear both old cards
+                changeCardImage(cardChoiceAAAIndex, TURN_DOWN);
+                changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
+                cardChoiceAAAIndex = arrayIndex;             // New card becomes AAA with ZZZ empty
+                cardChoiceZZZIndex = NONE;
+
+                changeCardImage(cardChoiceAAAIndex, TURN_UP);
+            }
+    }
+
+    if (numMatches === (maxCards/2))
+        resetCards();
 }
 
 function dealOutCards() {
+
+    if (!tableReset) return;
+
+    tableReset = false;
+
     selectElement = document.querySelector('#card_selector');
-    maxCards = selectElement.value;
+    maxCards = Number(selectElement.value);
     cardLocationToID.length = maxCards;
 
     shuffle();

@@ -7,21 +7,18 @@ body {
 }
 
 .game_board_container {
-  /*width: 50em;
-  height: 50em;*/
   width: 80%;
   margin-left: auto;
   margin-right: auto;
-  /*position: relative;*/
   background-image: linear-gradient(to right, green, rgb(5, 100, 5));
   border: 3px solid white;
 }
 
 h1 {
   text-align: center;
-  top: 0.25em;
   width: 100%;
   color: rgb(224, 193, 52);
+  margin-top: 0.2em;
   font-size: 4em;
   font-family: "Franklin Gothic Medium";
 }
@@ -43,7 +40,8 @@ h1 {
 .card_selection_pulldown {
   margin-left: 1em;
   background-color: rgb(224, 193, 52);
-
+  box-shadow: 0.1em 0.1em;
+  height: 20%;
   color: black;
   font-size: 1em;
   width: 25%;
@@ -52,6 +50,7 @@ h1 {
 .deal_cards_button {
   background-color: blue;
   background-color: rgb(224, 193, 52);
+  box-shadow: 0.1em 0.1em;
 
   color: black;
   margin-left: 1em;
@@ -74,7 +73,6 @@ h1 {
 }
 
 .card {
-  /*position: absolute;*/
   margin-top: 1em;
   margin-left: 1em;
   width: 8%;
