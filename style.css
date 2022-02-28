@@ -19,20 +19,24 @@ h1 {
   width: 100%;
   color: rgb(224, 193, 52);
   margin-top: 0.2em;
-  font-size: 4em;
+  font-size: 3em;
   font-family: "Franklin Gothic Medium";
 }
 
 .control_panel_container {
-  border: 5px solid black;
+  border-top: 5px solid black;
+  border-left: 5px solid black;
+  border-right: 5px solid black;
+
   height: 4em;
   display: flex;
   flex-direction: row;
 }
 
 .options_panel_container {
-  border: 5px solid black;
-  height: 9em;
+  border-left: 5px solid black;
+  border-right: 5px solid black;
+  height: 7em;
   display: flex;
   flex-direction: column;
 }
@@ -62,18 +66,34 @@ h1 {
 }
 
 .card_group_container {
-  /*width: 50em;*/
   height: 40em;
   margin-left: auto;
   margin-right: auto;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  border: 5px solid orange;
+  border: 5px solid black;
 }
 
 .card {
   margin-top: 1em;
   margin-left: 1em;
   width: 8%;
+}
+
+.timer_class {
+  background-color: rgb(223, 95, 10);
+  margin-top: 2%;
+  margin-left: 10em;
+  width: 10%;
+  height: 50%;
+  box-shadow: 0.1em 0.1em;
+}
+
+.game_clock_class {
+  background-color: rgb(223, 95, 10);
+  margin-top: 2%;
+  width: 8%;
+  height: 50%;
+  box-shadow: 0.1em 0.1em;
 }

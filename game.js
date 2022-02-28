@@ -9,6 +9,7 @@ let cardChoiceAAAIndex = NONE;
 let cardChoiceZZZIndex = NONE;
 let tableReset = true;
 let numMatches = 0;
+let gameSecondCounter = 0;
 
 
 async function dealCards(max_cards) {
@@ -28,7 +29,7 @@ async function dealCards(max_cards) {
 
         switch(maxCards) {
             case 10:
-                card.setAttribute("style","width:16%")
+                card.setAttribute("style","width:14%")
                 break;
             case 20:
                 card.setAttribute("style","width:12%")
@@ -42,12 +43,31 @@ async function dealCards(max_cards) {
 
         let div_container = document.getElementById("card_group")
 
-        //await setTimeout(()=>{div_container.appendChild(card)}, 2000); 
+        await sleep(50);
         div_container.appendChild(card);
 
         cardLocationToID[i].element = card;
         cardLocationToID[i].img     = card_image;
     }
+    console.log("Launching")
+    launchNextSecondTimer();
+}
+
+function launchNextSecondTimer() {
+    if (tableReset) return;
+
+    gameSecondCounter++;
+    timer_element = document.getElementById("on_page_timer")
+
+    let minutes = Math.floor(gameSecondCounter/60);
+    let seconds = gameSecondCounter - 60*minutes;
+
+    let seconds_tens = Math.floor(seconds / 10)
+    let seconds_ones = seconds - 10*seconds_tens;
+
+    timer_element.innerHTML = `${minutes}:${seconds_tens}${seconds_ones}`
+
+    setTimeout(()=>{launchNextSecondTimer()}, 1000); 
 }
 
 function disappearCard(card_num) {
@@ -59,6 +79,7 @@ function resetCards () {
 
     tableReset = true;
     numMatches = 0;
+    gameSecondCounter = 0;
 }
 
 function changeCardImage(card, action) {
@@ -108,7 +129,7 @@ function cardClicked(arrayIndex) {
 
     if (cardChoiceAAAIndex === NONE) {
 
-        if (cardChoiceZZZIndex === NONE) {          // No cards chosen before this, make this card AAA, ZZZ is NONE
+        if (cardChoiceZZZIndex === NONE) {          // No cards chosen before this, make this card AAA, ZZZ is still NONE
             cardChoiceAAAIndex = arrayIndex;
 
             changeCardImage(cardChoiceAAAIndex, TURN_UP);
@@ -200,6 +221,12 @@ function shuffle() {
     console.log("Shuffled:")
     for (let i=0; i < cardLocationToID.length; i++) {
         console.log("New Location for " + i + " is " + cardLocationToID[i].id)
-        //cardLocationToID[i].element.src = cardLocationToID[i].element.image;
     }
 }
+
+function sleep(time){
+    return new Promise(resolve => {
+        setTimeout(resolve, time)
+    })  
+}
+
