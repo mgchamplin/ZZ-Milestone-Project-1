@@ -10,14 +10,44 @@ let cardChoiceZZZIndex = NONE;
 let tableReset = true;
 let numMatches = 0;
 let gameSecondCounter = 0;
+let dealingInProgress = false;
+let clockTimer = null;
 
+/*
+** function invoked from HTML on user click event "DEAL CARDS"
+*/
+function startGame() {
+
+    if (!tableReset) {
+        console.log("Restarting game");
+        resetCards(true);
+        //return;
+    }
+
+    tableReset = false;
+
+    selectElement = document.querySelector('#card_selector');
+    maxCards = Number(selectElement.value);
+    cardLocationToID.length = maxCards;
+
+    shuffle();
+
+    dealCards(maxCards)
+}
 
 async function dealCards(max_cards) {
-    console.log("Deal it")
+    if (maxCards === 0) return;
+
+    updateTimer(0);
+
+    console.log("Dealing start")
+    dealingInProgress = true;
+
+
     for (let i=0; i < max_cards; i++) {
         let card = document.createElement("img");
         let card_id = cardLocationToID[i].id;
-        console.log("ID = " + card_id)
+        //console.log("ID = " + card_id)
 
         let card_image = `assets/clubs-${card_id}.png`;
 
@@ -49,37 +79,79 @@ async function dealCards(max_cards) {
         cardLocationToID[i].element = card;
         cardLocationToID[i].img     = card_image;
     }
-    console.log("Launching")
-    launchNextSecondTimer();
+    if (!tableReset) launchNextSecondTimer();
+
+    console.log("Dealing done")
+    dealingInProgress = false;
+
 }
 
-function launchNextSecondTimer() {
-    if (tableReset) return;
+function updateTimer(totalSeconds) {
+    timer_element = document.getElementById("timer")
 
-    gameSecondCounter++;
-    timer_element = document.getElementById("on_page_timer")
-
-    let minutes = Math.floor(gameSecondCounter/60);
-    let seconds = gameSecondCounter - 60*minutes;
+    let minutes = Math.floor(totalSeconds/60);
+    let seconds = totalSeconds - 60*minutes;
 
     let seconds_tens = Math.floor(seconds / 10)
     let seconds_ones = seconds - 10*seconds_tens;
 
-    timer_element.innerHTML = `${minutes}:${seconds_tens}${seconds_ones}`
-
-    setTimeout(()=>{launchNextSecondTimer()}, 1000); 
+    timer_element.innerHTML = `&nbsp Timer: 0${minutes}:${seconds_tens}${seconds_ones}`
 }
 
-function disappearCard(card_num) {
-    document.getElementById(`c${card_num}`).style.opacity = 0;
+function launchNextSecondTimer() {
+    console.log("Set Timer - TableRset = " + tableReset + " clockTimer = " + clockTimer)
+
+    if (tableReset) return;
+
+    gameSecondCounter++;
+    
+    updateTimer(gameSecondCounter);
+
+    clockTimer = setTimeout(()=>{launchNextSecondTimer()}, 1000); 
 }
 
-function resetCards () {
-    clearOutCards(maxCards)
+function resetCards (reset_timer) {
+    if (tableReset || dealingInProgress) {
+        console.log("WAIT PLEASE - clockTimer=" + clockTimer + " TableReset=" + tableReset)
+        return;
+
+        updateTimer(0)
+        tableReset = true;
+        if (clockTimer) {
+            console.log("Clearing timer")
+            clearTimeout(clockTimer);
+        }
+    }
+    console.log("Clearing a total of " + maxCards)
+    for (let i=0; i < maxCards; i++) {  console.log("clear " + i)
+        if (cardLocationToID[i].element != null) {
+            cardLocationToID[i].element.remove();
+            cardLocationToID[i] = null;
+        }
+    }
+    cardChoiceAAAIndex  = NONE;
+    cardChoiceZZZIndex = NONE;
 
     tableReset = true;
     numMatches = 0;
     gameSecondCounter = 0;
+}
+
+function checkForMatch(arrayIndex) {
+   
+    if (cardLocationToID[cardChoiceAAAIndex].element.id === cardLocationToID[cardChoiceZZZIndex].element.id) {
+        console.log("MATCH!")
+        changeCardImage(cardChoiceAAAIndex, REMOVE_CARD);
+        changeCardImage(cardChoiceZZZIndex, REMOVE_CARD);
+        cardChoiceAAAIndex = NONE;
+        cardChoiceZZZIndex = NONE;
+
+        numMatches++;
+
+        let audio = new Audio('./assets/MatchMade.wav');
+        audio.volume = 0.5;
+        audio.play();
+    }
 }
 
 function changeCardImage(card, action) {
@@ -99,29 +171,6 @@ function changeCardImage(card, action) {
         default:
             console.log("You screwed up")
             break;
-    }
-}
-
-function clearOutCards(max_cards) {
-    console.log("Clearing a total of " + max_cards)
-    for (let i=0; i < max_cards; i++) {  console.log("clear " + i)
-        cardLocationToID[i].element.remove();
-        cardLocationToID[i] = null;
-    }
-    cardChoiceAAAIndex  = NONE;
-    cardChoiceZZZIndex = NONE;
-}
-
-function checkForMatch(arrayIndex) {
-   
-    if (cardLocationToID[cardChoiceAAAIndex].element.id === cardLocationToID[cardChoiceZZZIndex].element.id) {
-        console.log("MATCH!")
-        changeCardImage(cardChoiceAAAIndex, REMOVE_CARD);
-        changeCardImage(cardChoiceZZZIndex, REMOVE_CARD);
-        cardChoiceAAAIndex = NONE;
-        cardChoiceZZZIndex = NONE;
-
-        numMatches++;
     }
 }
 
@@ -181,22 +230,7 @@ function cardClicked(arrayIndex) {
     }
 
     if (numMatches === (maxCards/2))
-        resetCards();
-}
-
-function dealOutCards() {
-
-    if (!tableReset) return;
-
-    tableReset = false;
-
-    selectElement = document.querySelector('#card_selector');
-    maxCards = Number(selectElement.value);
-    cardLocationToID.length = maxCards;
-
-    shuffle();
-
-    dealCards(maxCards)
+        resetCards(false);
 }
 
 function shuffleArray() {
@@ -219,9 +253,6 @@ function shuffle() {
     console.log("Shuffle")
     shuffleArray()
     console.log("Shuffled:")
-    for (let i=0; i < cardLocationToID.length; i++) {
-        console.log("New Location for " + i + " is " + cardLocationToID[i].id)
-    }
 }
 
 function sleep(time){

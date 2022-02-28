@@ -14,12 +14,11 @@
             <h1>Match Game Challenge</h1>
 
             <div id="control_panel" class="control_panel_container">
-                <button class="deal_cards_button" onclick="dealOutCards()">Deal
+                <button class="deal_cards_button" onclick="startGame()">Deal
                     Cards</button>
-                <button class="deal_cards_button" onclick="resetCards()">Reset
+                <button class="deal_cards_button" onclick="resetCards(true)">Reset
                     Game</button>
-                <h2 class="timer_class">&nbspTimer:</h2>
-                <h2 class="game_clock_class" id="on_page_timer">0:00</h2>
+                <h2 id="timer" class="timer_class">&nbsp Timer: 00:00</h2>
             </div>
 
             <div id="options_panel" class="options_panel_container">
