@@ -21,6 +21,7 @@ let best50Score = 0;
 let soundButton = document.createElement("img")
 soundButton.src = "./assets/SoundOn.jpg";
 soundButton.className = "sound_button_class";
+soundButton.style.opacity = 0.8;
 let control_panel_container = document.getElementById("control_panel")
 
 control_panel_container.appendChild(soundButton);
@@ -54,7 +55,10 @@ async function startGame() {
 }
 
 async function dealCards(max_cards) {
-    if (maxCards === 0) return;
+    if (maxCards === 0) {
+        logUserMessage("Please select number of cards")
+        return;
+    }
 
     updateTimer(0);
 
@@ -70,7 +74,7 @@ async function dealCards(max_cards) {
 
         card.src = cardBackSideImage;
         card.id = `c${card_id}`
-        card.className = `card card${card_id}`
+        card.className = `card card${card_id}`;
 
         let card_num = Number(maxCards)
 
@@ -183,7 +187,8 @@ function changeCardImage(card, action) {
 
     switch(action) {
         case REMOVE_CARD:
-            cardLocationToID[card].element.src = '';
+            //cardLocationToID[card].element.src = '';
+            cardLocationToID[card].element.style.opacity = 0.1;
             cardLocationToID[card].id = 0;
             break;
         case TURN_DOWN:
@@ -283,17 +288,26 @@ function updateTopScore() {
                 best16Score = gameSecondCounter;
                 best_score  = gameSecondCounter;
             }
+            else {
+                best_score = best16Score;
+            }
             break;
         case 30:
             if ((best32Score === 0 ) || (gameSecondCounter < best32Score)) {
                 best32Score = gameSecondCounter;  
                 best_score =  gameSecondCounter;
             }       
+            else {
+                best_score = best32Score;
+            }
             break;
         case 50:
             if ((best50Score === 0 ) || (gameSecondCounter < best50Score)) {
                 best50Score = gameSecondCounter;
                 best_score =  gameSecondCounter;
+            }
+            else {
+                best_score = best50Score;
             }
             break;
         default:
@@ -301,9 +315,10 @@ function updateTopScore() {
     }
     let baseMsg = "AWESOME JOB! <br> Your "
 
-    if (best_score === 0)                   // No best score this time
+    if (best_score != gameSecondCounter) {                  // No best score this time
+        logUserMessage(baseMsg + `${maxCards}-card best time is still ${best_score} seconds.`)
         return;
-
+    }
     if (minutes === 0)
         logUserMessage(baseMsg + `${maxCards}-card best time is ${best_score} seconds.`)
     else
@@ -312,7 +327,7 @@ function updateTopScore() {
 
 }
 
-function shuffleArray() {
+function shuffle() {
     for (let i = 0; i < cardLocationToID.length; i++) {
         let card = null;
         let img = null;
@@ -326,12 +341,6 @@ function shuffleArray() {
         cardLocationToID[i] = cardLocationToID[j];
         cardLocationToID[j] = temp;
     }
-}
-
-function shuffle() {
-    console.log("Shuffle")
-    shuffleArray()
-    console.log("Shuffled:")
 }
 
 function sleep(time){

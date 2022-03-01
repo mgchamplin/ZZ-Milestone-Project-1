@@ -3,7 +3,8 @@
 }
 
 body {
-  background-color: rgb(27, 4, 56);
+  margin-top: 2em;
+  background-image: url("./assets/card_back.jpg");
 }
 
 .game_board_container {
@@ -19,7 +20,9 @@ body {
 h1 {
   text-align: center;
   width: 100%;
-  color: rgb(224, 193, 52);
+  /*color: rgb(224, 193, 52);*/
+  color: white;
+
   margin-top: 0.2em;
   font-size: 3em;
   font-family: "Franklin Gothic Medium";
@@ -37,7 +40,7 @@ h1 {
 }
 
 .control_panel_button {
-  background-color: rgb(224, 193, 52);
+  background-color: rgb(53, 196, 53);
   box-shadow: 0.1em 0.1em;
 
   color: black;
@@ -50,6 +53,10 @@ h1 {
 
 .deal_cards_button {
   width: 18%;
+}
+
+.deal_cards_button:hover {
+  color: white;
 }
 
 .small_button {
@@ -91,7 +98,7 @@ h1 {
 
 .card_selection_pulldown {
   margin-left: 1em;
-  background-color: rgb(224, 193, 52);
+  background-color: rgb(53, 196, 53);
   box-shadow: 0.1em 0.1em;
   height: 20%;
   color: black;
@@ -100,10 +107,14 @@ h1 {
   text-align: center;
 }
 
+.card_selection_pulldown:hover {
+  color: white;
+}
+
 .status_bar_class {
-  border: 3px solid black;
-  background-color: rgb(224, 193, 52);
-  font-size: 1.4em;
+  /*background-color: white;*/
+  color: white;
+  font-size: 1.8em;
   margin-top: 0%;
   margin-left: 1em;
   width: 50%;
