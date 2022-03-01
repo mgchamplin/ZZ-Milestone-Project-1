@@ -17,22 +17,19 @@
                 <button class="control_panel_button deal_cards_button"
                     onclick="startGame()">Deal
                     Cards</button>
-                <button class="control_panel_button small_button"
-                    onclick="resetCards(true)">Reset
-                    Game</button>
-                <button id="sound_button" class="control_panel_button
-                    small_button"
-                    onclick="toggleSound(true)">Turn Sound Off</button>
-                <h2 id="timer" class="timer_class">&nbsp Timer: 00:00</h2>
+
+                <h2 id="timer" class="timer_class">Timer: 00:00</h2>
             </div>
 
             <div id="options_panel" class="options_panel_container">
                 <select id="card_selector" class="card_selection_pulldown">
                     <option value=0>Select Cards</option>
-                    <option value=10>10 Cards</option>
-                    <option value=20>20 Cards</option>
+                    <option value=16>16 Cards</option>
+                    <option value=30>30 Cards</option>
                     <option value=50>50 Cards</option>
                 </select>
+                <h2 id="status_bar" class="status_bar_class">Select your cards &
+                    Deal</h2>
             </div>
             <div id="card_group" class="card_group_container"></div>
 

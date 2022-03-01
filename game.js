@@ -13,16 +13,34 @@ let gameSecondCounter = 0;
 let dealingInProgress = false;
 let clockTimer = null;
 let soundOn = true;
+let cardBackSideImage = "assets/card_back_blue.jfif";
+let best16Score = 0;
+let best30Score = 0;
+let best50Score = 0;
+
+let soundButton = document.createElement("img")
+soundButton.src = "./assets/SoundOn.jpg";
+soundButton.className = "sound_button_class";
+let control_panel_container = document.getElementById("control_panel")
+
+control_panel_container.appendChild(soundButton);
+soundButton.addEventListener("click",function() {toggleSound()})
+
 
 /*
 ** function invoked from HTML on user click event "DEAL CARDS"
 */
-function startGame() {
+async function startGame() {
 
-    if (!tableReset) {
-        console.log("Restarting game");
-        resetCards(true);
+    if (dealingInProgress) {
+        logUserMessage("Please wait until after dealing")
+        return;
     }
+
+    logUserMessage("Start Searching!")
+
+    if (tableReset === false)
+        resetCards();
 
     tableReset = false;
 
@@ -32,7 +50,7 @@ function startGame() {
 
     shuffle();
 
-    dealCards(maxCards)
+    await dealCards(maxCards)
 }
 
 async function dealCards(max_cards) {
@@ -50,18 +68,18 @@ async function dealCards(max_cards) {
 
         let card_image = `assets/clubs-${card_id}.png`;
 
-        card.src = "assets/card_back.jpg";
+        card.src = cardBackSideImage;
         card.id = `c${card_id}`
         card.className = `card card${card_id}`
 
         let card_num = Number(maxCards)
 
         switch(maxCards) {
-            case 10:
+            case 16:
                 card.setAttribute("style","width:14%")
                 break;
-            case 20:
-                card.setAttribute("style","width:12%")
+            case 30:
+                card.setAttribute("style","width:10%")
                 break;
             case 50:
             default:
@@ -72,7 +90,7 @@ async function dealCards(max_cards) {
 
         let div_container = document.getElementById("card_group")
 
-        await sleep(50);
+        await sleep(25);
         div_container.appendChild(card);
 
         cardLocationToID[i].element = card;
@@ -82,7 +100,6 @@ async function dealCards(max_cards) {
 
     console.log("Dealing done")
     dealingInProgress = false;
-
 }
 
 function updateTimer(totalSeconds) {
@@ -97,8 +114,11 @@ function updateTimer(totalSeconds) {
     timer_element.innerHTML = `&nbsp Timer: 0${minutes}:${seconds_tens}${seconds_ones}`
 }
 
+function clearTimer() {
+    window.clearTimeout(clockTimer);
+}
+
 function launchNextSecondTimer() {
-    //console.log("Set Timer - TableRset = " + tableReset + " clockTimer = " + clockTimer)
 
     if (tableReset) return;
 
@@ -109,18 +129,10 @@ function launchNextSecondTimer() {
     clockTimer = setTimeout(()=>{launchNextSecondTimer()}, 1000); 
 }
 
-function resetCards (reset_timer) {
-    if (tableReset || dealingInProgress) {
-        console.log("WAIT PLEASE - clockTimer=" + clockTimer + " TableReset=" + tableReset)
-        return;
+function resetCards () {
 
-        updateTimer(0)
-        tableReset = true;
-        if (clockTimer) {
-            console.log("Clearing timer")
-            clearTimeout(clockTimer);
-        }
-    }
+    clearTimer()
+
     console.log("Clearing a total of " + maxCards)
     for (let i=0; i < maxCards; i++) {  console.log("clear " + i)
         if (cardLocationToID[i].element != null) {
@@ -138,16 +150,14 @@ function resetCards (reset_timer) {
 
 function toggleSound() {
 
-    let button_str = "Turn Sound Off";
-    if (soundOn) 
-        button_str = "Turn Sound On"
-
-    sound_button = document.getElementById("sound_button")
-    sound_button.innerHTML = button_str;
+    if (soundOn)
+        soundButton.src = "./assets/SoundOff.jpg";
+    else
+        soundButton.src = "./assets/SoundOn.jpg";
 
     soundOn = !soundOn;
 
-    console.log("Current: Str " + button_str + " soundOn = " + soundOn)
+    console.log(" soundOn = " + soundOn);
 }
 
 function checkForMatch(arrayIndex) {
@@ -177,7 +187,7 @@ function changeCardImage(card, action) {
             cardLocationToID[card].id = 0;
             break;
         case TURN_DOWN:
-            cardLocationToID[card].element.src = "assets/card_back.jpg";
+            cardLocationToID[card].element.src = cardBackSideImage;
             console.log("TURN DOWN  " + cardLocationToID[card].element.id);
             break;
         case TURN_UP:
@@ -247,9 +257,59 @@ function cardClicked(arrayIndex) {
                 changeCardImage(cardChoiceAAAIndex, TURN_UP);
             }
     }
+    /*
+    ** Check if the game is over
+    */
+    if (numMatches === (maxCards/2)) {
+        updateTopScore()
+        resetCards();
+        if (soundOn) {
+            let audio = new Audio('./assets/CrowdApplause.wav');
+            audio.volume = 0.5;
+            audio.play();
+        }
+    }
+}
 
-    if (numMatches === (maxCards/2))
-        resetCards(false);
+function updateTopScore() {
+
+    let minutes = Math.floor(gameSecondCounter/60);
+    let seconds = gameSecondCounter - 60*minutes;
+    let best_score = 0;
+
+    switch(maxCards) {
+        case 16:
+            if ((best16Score === 0 ) || (gameSecondCounter < best16Score)) {
+                best16Score = gameSecondCounter;
+                best_score  = gameSecondCounter;
+            }
+            break;
+        case 30:
+            if ((best32Score === 0 ) || (gameSecondCounter < best32Score)) {
+                best32Score = gameSecondCounter;  
+                best_score =  gameSecondCounter;
+            }       
+            break;
+        case 50:
+            if ((best50Score === 0 ) || (gameSecondCounter < best50Score)) {
+                best50Score = gameSecondCounter;
+                best_score =  gameSecondCounter;
+            }
+            break;
+        default:
+            console.log("Something is wrong")
+    }
+    let baseMsg = "AWESOME JOB! <br> Your "
+
+    if (best_score === 0)                   // No best score this time
+        return;
+
+    if (minutes === 0)
+        logUserMessage(baseMsg + `${maxCards}-card best time is ${best_score} seconds.`)
+    else
+        logUserMessage(baseMsg + `${maxCards}-card best time is ${minutes} minutes and ${seconds} seconds`)
+
+
 }
 
 function shuffleArray() {
@@ -280,3 +340,12 @@ function sleep(time){
     })  
 }
 
+function logUserMessage(message_str) {
+    let message_box = document.getElementById("status_bar");
+    message_box.innerHTML = message_str;
+}
+/*
+<button class="control_panel_button small_button"
+                    onclick="resetCards(true)">Reset
+                    Game</button>
+                    */
