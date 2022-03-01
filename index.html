@@ -14,16 +14,21 @@
             <h1>Match Game Challenge</h1>
 
             <div id="control_panel" class="control_panel_container">
-                <button class="deal_cards_button" onclick="startGame()">Deal
+                <button class="control_panel_button deal_cards_button"
+                    onclick="startGame()">Deal
                     Cards</button>
-                <button class="deal_cards_button" onclick="resetCards(true)">Reset
+                <button class="control_panel_button small_button"
+                    onclick="resetCards(true)">Reset
                     Game</button>
+                <button id="sound_button" class="control_panel_button
+                    small_button"
+                    onclick="toggleSound(true)">Turn Sound Off</button>
                 <h2 id="timer" class="timer_class">&nbsp Timer: 00:00</h2>
             </div>
 
             <div id="options_panel" class="options_panel_container">
                 <select id="card_selector" class="card_selection_pulldown">
-                    <option value=0>Select Number of Cards</option>
+                    <option value=0>Select Cards</option>
                     <option value=10>10 Cards</option>
                     <option value=20>20 Cards</option>
                     <option value=50>50 Cards</option>

@@ -48,11 +48,11 @@ h1 {
   height: 20%;
   color: black;
   font-size: 1em;
-  width: 25%;
+  width: 18%;
+  text-align: center;
 }
 
-.deal_cards_button {
-  background-color: blue;
+.control_panel_button {
   background-color: rgb(224, 193, 52);
   box-shadow: 0.1em 0.1em;
 
@@ -60,9 +60,16 @@ h1 {
   margin-left: 1em;
   margin-top: 1em;
   text-align: center;
-  width: 25%;
   height: 50%;
   font-size: 1em;
+}
+
+.deal_cards_button {
+  width: 18%;
+}
+
+.small_button {
+  width: 15%;
 }
 
 .card_group_container {

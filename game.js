@@ -12,6 +12,7 @@ let numMatches = 0;
 let gameSecondCounter = 0;
 let dealingInProgress = false;
 let clockTimer = null;
+let soundOn = true;
 
 /*
 ** function invoked from HTML on user click event "DEAL CARDS"
@@ -21,7 +22,6 @@ function startGame() {
     if (!tableReset) {
         console.log("Restarting game");
         resetCards(true);
-        //return;
     }
 
     tableReset = false;
@@ -47,7 +47,6 @@ async function dealCards(max_cards) {
     for (let i=0; i < max_cards; i++) {
         let card = document.createElement("img");
         let card_id = cardLocationToID[i].id;
-        //console.log("ID = " + card_id)
 
         let card_image = `assets/clubs-${card_id}.png`;
 
@@ -99,7 +98,7 @@ function updateTimer(totalSeconds) {
 }
 
 function launchNextSecondTimer() {
-    console.log("Set Timer - TableRset = " + tableReset + " clockTimer = " + clockTimer)
+    //console.log("Set Timer - TableRset = " + tableReset + " clockTimer = " + clockTimer)
 
     if (tableReset) return;
 
@@ -137,6 +136,20 @@ function resetCards (reset_timer) {
     gameSecondCounter = 0;
 }
 
+function toggleSound() {
+
+    let button_str = "Turn Sound Off";
+    if (soundOn) 
+        button_str = "Turn Sound On"
+
+    sound_button = document.getElementById("sound_button")
+    sound_button.innerHTML = button_str;
+
+    soundOn = !soundOn;
+
+    console.log("Current: Str " + button_str + " soundOn = " + soundOn)
+}
+
 function checkForMatch(arrayIndex) {
    
     if (cardLocationToID[cardChoiceAAAIndex].element.id === cardLocationToID[cardChoiceZZZIndex].element.id) {
@@ -148,9 +161,11 @@ function checkForMatch(arrayIndex) {
 
         numMatches++;
 
-        let audio = new Audio('./assets/MatchMade.wav');
-        audio.volume = 0.5;
-        audio.play();
+        if (soundOn) {
+            let audio = new Audio('./assets/MatchMade.wav');
+            audio.volume = 0.5;
+            audio.play();
+        }
     }
 }
 
@@ -159,6 +174,7 @@ function changeCardImage(card, action) {
     switch(action) {
         case REMOVE_CARD:
             cardLocationToID[card].element.src = '';
+            cardLocationToID[card].id = 0;
             break;
         case TURN_DOWN:
             cardLocationToID[card].element.src = "assets/card_back.jpg";
@@ -175,6 +191,9 @@ function changeCardImage(card, action) {
 }
 
 function cardClicked(arrayIndex) {
+
+    console.log("card " + arrayIndex + " id = " + cardLocationToID[arrayIndex].id)
+    if (cardLocationToID[arrayIndex].id === 0) return;
 
     if (cardChoiceAAAIndex === NONE) {
 
