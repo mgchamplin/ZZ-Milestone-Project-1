@@ -9,14 +9,9 @@ let cardChoiceAAAIndex = NONE;
 let cardChoiceZZZIndex = NONE;
 let tableReset = true;
 let numMatches = 0;
-let gameSecondCounter = 0;
 let dealingInProgress = false;
 let clockTimer = null;
 let cardBackSideImage = "assets/card_back_blue.jfif";
-let best16Score = 0;
-let best30Score = 0;
-let best50Score = 0;
-
 
 class soundButton {
 
@@ -57,6 +52,100 @@ class soundButton {
     }
 }
 
+class ControlPannel {
+    constructor() {
+        this.game_second_counter = 0;
+        this.best16Score = 0;
+        this.best30Score = 0;
+        this.best50Score = 0;
+
+    }
+
+    updateTimer(totalSeconds) {
+        let timer_element = document.getElementById("timer")
+    
+        let minutes = Math.floor(totalSeconds/60);
+        let seconds = totalSeconds - 60*minutes;
+    
+        let seconds_tens = Math.floor(seconds / 10)
+        let seconds_ones = seconds - 10*seconds_tens;
+    
+        timer_element.innerHTML = `&nbsp Timer: 0${minutes}:${seconds_tens}${seconds_ones}`
+    }
+
+    launchNextSecondTimer() {
+
+        if (tableReset) return;
+    
+        this.game_second_counter++;
+        
+        ControlPanelFunctions.updateTimer(this.game_second_counter);
+    
+        clockTimer = setTimeout(()=>{this.launchNextSecondTimer()}, 1000); 
+    }
+
+    clearTimer() {
+        window.clearTimeout(clockTimer);
+    }
+
+    logUserMessage(message_str) {
+        let message_box = document.getElementById("status_bar");
+        message_box.innerHTML = message_str;
+    }
+
+    ClearGameCounter () {
+        this.game_second_counter = 0;
+    }
+
+    UpdateTopScore() {
+
+        let minutes = Math.floor(this.game_second_counter/60);
+        let seconds = this.game_second_counter - 60*minutes;
+        let best_score = 0;
+    
+        switch(maxCards) {
+            case 16:
+                if ((this.best16Score === 0 ) || (this.game_second_counter < this.best16Score)) {
+                    this.best16Score = this.game_second_counter;
+                    best_score  = this.game_second_counter;
+                }
+                else {
+                    best_score = this.best16Score;
+                }
+                break;
+            case 30:
+                if ((this.best30Score === 0 ) || (this.game_second_counter < this.best30Score)) {
+                    this.best30Score = this.game_second_counter;  
+                    best_score =  this.game_second_counter;
+                }       
+                else {
+                    best_score = this.best30Score;
+                }
+                break;
+            case 50:
+                if ((this.best50Score === 0 ) || (this.game_second_counter < this.best50Score)) {
+                    this.best50Score = this.game_second_counter;
+                    best_score =  this.game_second_counter;
+                }
+                else {
+                    best_score = this.best50Score;
+                }
+                break;
+            default:
+                console.log("Something is wrong")
+        }
+        let baseMsg = "AWESOME JOB! <br> Your "
+    
+        if (best_score != this.game_second_counter) {                  // No best score this time
+            this.logUserMessage(baseMsg + `${maxCards}-card best time is still ${best_score} seconds.`)
+            return;
+        }
+        if (minutes === 0)
+            this.logUserMessage(baseMsg + `${maxCards}-card best time is ${best_score} seconds.`)
+        else
+            this.logUserMessage(baseMsg + `${maxCards}-card best time is ${minutes} minutes and ${seconds} seconds`)
+    }
+}
 
 
 /*
@@ -71,19 +160,22 @@ let SoundControlButton      = new soundButton();
 control_panel_container.appendChild(SoundControlButton.sound_button);
 SoundControlButton.sound_button.addEventListener("click", function() {SoundControlButton.toggleSound()});
 
-
-
 /*
-** function invoked from HTML on user click event "DEAL CARDS"
+** Establish the control panel
 */
+let ControlPanelFunctions = new ControlPannel();
+/*
+** And wait for the user to start the game (startGame). by invoking "DEAL CARDS"
+*/
+
 async function startGame() {
 
     if (dealingInProgress) {
-        logUserMessage("Please wait until after dealing")
+        ControlPanelFunctions.logUserMessage("Please wait until after dealing completes")
         return;
     }
 
-    logUserMessage("Start Searching!")
+    ControlPanelFunctions.logUserMessage("Start Searching!")
 
     if (tableReset === false)
         resetCards();
@@ -99,13 +191,19 @@ async function startGame() {
     await dealCards(maxCards)
 }
 
+function sleep(time){
+    return new Promise(resolve => {
+        setTimeout(resolve, time)
+    })  
+}
+
 async function dealCards(max_cards) {
     if (maxCards === 0) {
-        logUserMessage("Please select number of cards")
+        ControlPanelFunctions.logUserMessage("Please select number of cards")
         return;
     }
 
-    updateTimer(0);
+    ControlPanelFunctions.updateTimer(0);
 
     console.log("Dealing start")
     dealingInProgress = true;
@@ -145,42 +243,15 @@ async function dealCards(max_cards) {
         cardLocationToID[i].element = card;
         cardLocationToID[i].img     = card_image;
     }
-    if (!tableReset) launchNextSecondTimer();
+    if (!tableReset) ControlPanelFunctions.launchNextSecondTimer();
 
     console.log("Dealing done")
     dealingInProgress = false;
 }
 
-function updateTimer(totalSeconds) {
-    timer_element = document.getElementById("timer")
-
-    let minutes = Math.floor(totalSeconds/60);
-    let seconds = totalSeconds - 60*minutes;
-
-    let seconds_tens = Math.floor(seconds / 10)
-    let seconds_ones = seconds - 10*seconds_tens;
-
-    timer_element.innerHTML = `&nbsp Timer: 0${minutes}:${seconds_tens}${seconds_ones}`
-}
-
-function clearTimer() {
-    window.clearTimeout(clockTimer);
-}
-
-function launchNextSecondTimer() {
-
-    if (tableReset) return;
-
-    gameSecondCounter++;
-    
-    updateTimer(gameSecondCounter);
-
-    clockTimer = setTimeout(()=>{launchNextSecondTimer()}, 1000); 
-}
-
 function resetCards () {
 
-    clearTimer()
+    ControlPanelFunctions.clearTimer()
 
     console.log("Clearing a total of " + maxCards)
     for (let i=0; i < maxCards; i++) {  console.log("clear " + i)
@@ -194,7 +265,7 @@ function resetCards () {
 
     tableReset = true;
     numMatches = 0;
-    gameSecondCounter = 0;
+    ControlPanelFunctions.ClearGameCounter();
 }
 
 function checkForMatch(arrayIndex) {
@@ -294,62 +365,12 @@ function cardClicked(arrayIndex) {
     ** Check if the game is over
     */
     if (numMatches === (maxCards/2)) {
-        updateTopScore()
+        ControlPanelFunctions.UpdateTopScore()
         resetCards();
         SoundControlButton.playApplause()
     }
 }
 
-function updateTopScore() {
-
-    let minutes = Math.floor(gameSecondCounter/60);
-    let seconds = gameSecondCounter - 60*minutes;
-    let best_score = 0;
-
-    switch(maxCards) {
-        case 16:
-            if ((best16Score === 0 ) || (gameSecondCounter < best16Score)) {
-                best16Score = gameSecondCounter;
-                best_score  = gameSecondCounter;
-            }
-            else {
-                best_score = best16Score;
-            }
-            break;
-        case 30:
-            if ((best30Score === 0 ) || (gameSecondCounter < best30Score)) {
-                best30Score = gameSecondCounter;  
-                best_score =  gameSecondCounter;
-            }       
-            else {
-                best_score = best30Score;
-            }
-            break;
-        case 50:
-            if ((best50Score === 0 ) || (gameSecondCounter < best50Score)) {
-                best50Score = gameSecondCounter;
-                best_score =  gameSecondCounter;
-            }
-            else {
-                best_score = best50Score;
-            }
-            break;
-        default:
-            console.log("Something is wrong")
-    }
-    let baseMsg = "AWESOME JOB! <br> Your "
-
-    if (best_score != gameSecondCounter) {                  // No best score this time
-        logUserMessage(baseMsg + `${maxCards}-card best time is still ${best_score} seconds.`)
-        return;
-    }
-    if (minutes === 0)
-        logUserMessage(baseMsg + `${maxCards}-card best time is ${best_score} seconds.`)
-    else
-        logUserMessage(baseMsg + `${maxCards}-card best time is ${minutes} minutes and ${seconds} seconds`)
-
-
-}
 
 function shuffle() {
     for (let i = 0; i < cardLocationToID.length; i++) {
@@ -366,19 +387,3 @@ function shuffle() {
         cardLocationToID[j] = temp;
     }
 }
-
-function sleep(time){
-    return new Promise(resolve => {
-        setTimeout(resolve, time)
-    })  
-}
-
-function logUserMessage(message_str) {
-    let message_box = document.getElementById("status_bar");
-    message_box.innerHTML = message_str;
-}
-/*
-<button class="control_panel_button small_button"
-                    onclick="resetCards(true)">Reset
-                    Game</button>
-                    */
