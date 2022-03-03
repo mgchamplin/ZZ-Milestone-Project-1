@@ -12,20 +12,65 @@ let numMatches = 0;
 let gameSecondCounter = 0;
 let dealingInProgress = false;
 let clockTimer = null;
-let soundOn = true;
 let cardBackSideImage = "assets/card_back_blue.jfif";
 let best16Score = 0;
 let best30Score = 0;
 let best50Score = 0;
 
-let soundButton = document.createElement("img")
-soundButton.src = "./assets/SoundOn.jpg";
-soundButton.className = "sound_button_class";
-soundButton.style.opacity = 0.8;
-let control_panel_container = document.getElementById("control_panel")
 
-control_panel_container.appendChild(soundButton);
-soundButton.addEventListener("click",function() {toggleSound()})
+class soundButton {
+
+    constructor(image, class_name) {
+        this.sound_button               = document.createElement("img");
+        this.sound_button.src           = "./assets/SoundOn.jpg";
+        this.sound_button.className     = "sound_button_class";
+        this.sound_button.style.opacity = 0.7;
+        this.sound_on                   = true;
+        console.log("sound button " + this.sound_button)
+    }
+
+    toggleSound() {
+        if (this.sound_on)
+            this.sound_button.src = "./assets/SoundOff.jpg";
+        else
+            this.sound_button.src = "./assets/SoundOn.jpg";
+    
+        this.sound_on = !this.sound_on;
+    
+        console.log(" sound_on = " + this.sound_on + " src = " + this.sound_button.src);
+    }
+
+    playMatchSound () {
+        if (this.sound_on) {
+            let audio = new Audio('./assets/MatchMade.wav');
+            audio.volume = 0.5;
+            audio.play();
+        }
+    }
+
+    playApplause() {
+        if (this.sound_on) {
+            let audio = new Audio('./assets/CrowdApplause.wav');
+            audio.volume = 0.5;
+            audio.play();
+        }
+    }
+}
+
+
+
+/*
+** Set up the sound button object
+*/
+let control_panel_container = document.getElementById("control_panel")
+let SoundControlButton      = new soundButton();
+
+/*
+** Add it to the DOM and launch the sound button listener
+*/
+control_panel_container.appendChild(SoundControlButton.sound_button);
+SoundControlButton.sound_button.addEventListener("click", function() {SoundControlButton.toggleSound()});
+
 
 
 /*
@@ -152,18 +197,6 @@ function resetCards () {
     gameSecondCounter = 0;
 }
 
-function toggleSound() {
-
-    if (soundOn)
-        soundButton.src = "./assets/SoundOff.jpg";
-    else
-        soundButton.src = "./assets/SoundOn.jpg";
-
-    soundOn = !soundOn;
-
-    console.log(" soundOn = " + soundOn);
-}
-
 function checkForMatch(arrayIndex) {
    
     if (cardLocationToID[cardChoiceAAAIndex].element.id === cardLocationToID[cardChoiceZZZIndex].element.id) {
@@ -175,11 +208,7 @@ function checkForMatch(arrayIndex) {
 
         numMatches++;
 
-        if (soundOn) {
-            let audio = new Audio('./assets/MatchMade.wav');
-            audio.volume = 0.5;
-            audio.play();
-        }
+        SoundControlButton.playMatchSound()
     }
 }
 
@@ -187,7 +216,6 @@ function changeCardImage(card, action) {
 
     switch(action) {
         case REMOVE_CARD:
-            //cardLocationToID[card].element.src = '';
             cardLocationToID[card].element.style.opacity = 0.1;
             cardLocationToID[card].id = 0;
             break;
@@ -268,11 +296,7 @@ function cardClicked(arrayIndex) {
     if (numMatches === (maxCards/2)) {
         updateTopScore()
         resetCards();
-        if (soundOn) {
-            let audio = new Audio('./assets/CrowdApplause.wav');
-            audio.volume = 0.5;
-            audio.play();
-        }
+        SoundControlButton.playApplause()
     }
 }
 
@@ -293,12 +317,12 @@ function updateTopScore() {
             }
             break;
         case 30:
-            if ((best32Score === 0 ) || (gameSecondCounter < best32Score)) {
-                best32Score = gameSecondCounter;  
+            if ((best30Score === 0 ) || (gameSecondCounter < best30Score)) {
+                best30Score = gameSecondCounter;  
                 best_score =  gameSecondCounter;
             }       
             else {
-                best_score = best32Score;
+                best_score = best30Score;
             }
             break;
         case 50:
