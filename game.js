@@ -55,7 +55,7 @@ class soundButton {
 class ControlPannel {
     constructor() {
         this.game_second_counter = 0;
-        this.best16Score = 0;
+        this.best18Score = 0;
         this.best30Score = 0;
         this.best50Score = 0;
 
@@ -104,13 +104,13 @@ class ControlPannel {
         let best_score = 0;
     
         switch(maxCards) {
-            case 16:
-                if ((this.best16Score === 0 ) || (this.game_second_counter < this.best16Score)) {
-                    this.best16Score = this.game_second_counter;
+            case 18:
+                if ((this.best18Score === 0 ) || (this.game_second_counter < this.best18Score)) {
+                    this.best18Score = this.game_second_counter;
                     best_score  = this.game_second_counter;
                 }
                 else {
-                    best_score = this.best16Score;
+                    best_score = this.best18Score;
                 }
                 break;
             case 30:
@@ -222,7 +222,7 @@ async function dealCards(max_cards) {
         let card_num = Number(maxCards)
 
         switch(maxCards) {
-            case 16:
+            case 18:
                 card.setAttribute("style","width:14%")
                 break;
             case 30:
