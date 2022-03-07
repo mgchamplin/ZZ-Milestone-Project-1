@@ -1,18 +1,3 @@
-const REMOVE_CARD = 0;
-const TURN_DOWN = 1;
-const TURN_UP = 2;
-const NONE = -1;
-
-let maxCards = 50;
-let cardLocationToID = [100]
-let cardChoiceAAAIndex = NONE;
-let cardChoiceZZZIndex = NONE;
-let tableReset = true;
-let numMatches = 0;
-let dealingInProgress = false;
-let clockTimer = null;
-let cardBackSideImage = "assets/card_back_blue.jfif";
-
 class soundButton {
 
     constructor(image, class_name) {
@@ -21,7 +6,6 @@ class soundButton {
         this.sound_button.className     = "sound_button_class";
         this.sound_button.style.opacity = 0.7;
         this.sound_on                   = true;
-        console.log("sound button " + this.sound_button)
     }
 
     toggleSound() {
@@ -52,16 +36,17 @@ class soundButton {
     }
 }
 
-class ControlPannel {
+class ControlPanel {
     constructor() {
         this.game_second_counter = 0;
         this.best18Score = 0;
         this.best30Score = 0;
         this.best50Score = 0;
+        this.clockTimer = null;
 
     }
 
-    updateTimer(totalSeconds) {
+    updateTimerDisplay(totalSeconds) {
         let timer_element = document.getElementById("timer")
     
         let minutes = Math.floor(totalSeconds/60);
@@ -70,22 +55,22 @@ class ControlPannel {
         let seconds_tens = Math.floor(seconds / 10)
         let seconds_ones = seconds - 10*seconds_tens;
     
-        timer_element.innerHTML = `&nbsp Timer: 0${minutes}:${seconds_tens}${seconds_ones}`
+        timer_element.innerHTML = `&nbspTimer: 0${minutes}:${seconds_tens}${seconds_ones}`
     }
 
     launchNextSecondTimer() {
 
-        if (tableReset) return;
+        if (Cards.IsReset()) return;        // Haven't started yet
     
         this.game_second_counter++;
         
-        ControlPanelFunctions.updateTimer(this.game_second_counter);
+        ControlPanelFunctions.updateTimerDisplay(this.game_second_counter);
     
-        clockTimer = setTimeout(()=>{this.launchNextSecondTimer()}, 1000); 
+        this.clockTimer  = setTimeout(()=>{this.launchNextSecondTimer()}, 1000); 
     }
 
     clearTimer() {
-        window.clearTimeout(clockTimer);
+        window.clearTimeout(this.clockTimer);
     }
 
     logUserMessage(message_str) {
@@ -97,56 +82,281 @@ class ControlPannel {
         this.game_second_counter = 0;
     }
 
-    UpdateTopScore() {
-
+    DisplayBestScore(bestScore, isStill) {
         let minutes = Math.floor(this.game_second_counter/60);
         let seconds = this.game_second_counter - 60*minutes;
-        let best_score = 0;
+        let baseMsg = "AWESOME JOB! <br> Your "
+
+        if (minutes === 0)
+            this.logUserMessage(baseMsg + `${Cards.GetMaxCards()}-card best time is${isStill}:<br> ${bestScore} seconds.`)
+        else
+            this.logUserMessage(baseMsg + `${Cards.GetMaxCards()}-card best time is${isStill}:<br> ${minutes} minutes and ${seconds} seconds`)
+    }
+
+    UpdateTopScore() {
     
-        switch(maxCards) {
+        switch(Cards.GetMaxCards()) {
             case 18:
                 if ((this.best18Score === 0 ) || (this.game_second_counter < this.best18Score)) {
                     this.best18Score = this.game_second_counter;
-                    best_score  = this.game_second_counter;
+                    this.DisplayBestScore(this.game_second_counter, "");
                 }
                 else {
-                    best_score = this.best18Score;
+                    this.DisplayBestScore(this.best18Score, " still");
                 }
                 break;
             case 30:
                 if ((this.best30Score === 0 ) || (this.game_second_counter < this.best30Score)) {
                     this.best30Score = this.game_second_counter;  
-                    best_score =  this.game_second_counter;
+                    this.DisplayBestScore(this.game_second_counter, "");
                 }       
                 else {
-                    best_score = this.best30Score;
+                    this.DisplayBestScore(this.best30Score, " still");
                 }
                 break;
             case 50:
                 if ((this.best50Score === 0 ) || (this.game_second_counter < this.best50Score)) {
                     this.best50Score = this.game_second_counter;
-                    best_score =  this.game_second_counter;
+                    this.DisplayBestScore(this.game_second_counter, "");
                 }
                 else {
-                    best_score = this.best50Score;
+                    this.DisplayBestScore(this.best50Score, " still");
                 }
                 break;
             default:
                 console.log("Something is wrong")
         }
-        let baseMsg = "AWESOME JOB! <br> Your "
-    
-        if (best_score != this.game_second_counter) {                  // No best score this time
-            this.logUserMessage(baseMsg + `${maxCards}-card best time is still ${best_score} seconds.`)
-            return;
-        }
-        if (minutes === 0)
-            this.logUserMessage(baseMsg + `${maxCards}-card best time is ${best_score} seconds.`)
-        else
-            this.logUserMessage(baseMsg + `${maxCards}-card best time is ${minutes} minutes and ${seconds} seconds`)
     }
 }
 
+
+function sleep(time){
+    return new Promise(resolve => {
+        setTimeout(resolve, time)
+    })  
+}
+
+class CardsClass {
+
+    constructor() {
+        this.REMOVE_CARD    = 0;
+        this.TURN_DOWN      = 1;
+        this.TURN_UP        = 2;
+        this.numMatches     = 0;
+        this.NONE           = -1;
+        this.isReset        = true;
+        this.maxCards       = 50;
+        this.cardAAAIndex   = this.NONE;
+        this.cardZZZIndex   = this.NONE;  
+        this.dealingInProgress = false;
+        this.cardLocationToID = new Array();
+    }
+
+    IsReset() {
+        return(this.isReset)
+    }
+
+    SetReset(doReset) {
+        this.isReset = doReset;
+    }
+
+    SetMaxCards(max_cards) {
+        this.maxCards = max_cards;
+        this.cardLocationToID.length = max_cards;
+    }
+
+    GetMaxCards() {
+        return(this.maxCards);
+    }
+
+    IsDealingInProgress() {
+        return(this.dealingInProgress)
+    }
+
+    async Deal(max_cards) {
+        if (this.maxCards === 0) {
+            ControlPanelFunctions.logUserMessage("Please select number of cards")
+            return;
+        }
+
+        ControlPanelFunctions.updateTimerDisplay(0);
+
+        console.log("Dealing start")
+        this.dealingInProgress = true;
+
+        for (let i=0; i < max_cards; i++) {
+            let card = document.createElement("img");
+            let card_id = this.cardLocationToID[i].id;
+
+            card.src = "assets/card_back_blue.jfif";    // Display card face down
+            card.id = `c${card_id}`
+            card.className = `card card${card_id}`;
+
+            switch(this.maxCards) {
+                case 18:
+                    card.setAttribute("style","width:14%")
+                    break;
+                case 30:
+                    card.setAttribute("style","width:10%")
+                    break;
+                case 50:
+                default:
+                    card.setAttribute("style","width:8%")
+            }
+            /*
+            ** Add a listener for each card to process the card click
+            */
+            card.addEventListener("click",function() {Cards.CardClicked(i)})
+
+            let div_container = document.getElementById("card_group")
+
+            await sleep(25);
+            div_container.appendChild(card);
+
+            this.cardLocationToID[i].element = card;
+            this.cardLocationToID[i].img     = `assets/clubs-${card_id}.png`;
+        }
+        if (!Cards.IsReset()) ControlPanelFunctions.launchNextSecondTimer();
+
+        console.log("Dealing done")
+        this.dealingInProgress = false;
+    }
+
+    Reset() {
+
+        ControlPanelFunctions.clearTimer()
+
+        console.log("Clearing a total of " + this.maxCards)
+        for (let i=0; i < this.maxCards; i++) {  
+            console.log("clear " + i)
+            if (this.cardLocationToID[i].element != null) {
+                this.cardLocationToID[i].element.remove();
+                this.cardLocationToID[i] = null;
+            }
+        }
+        this.cardAAAIndex = this.NONE;
+        this.cardZZZIndex = this.NONE;
+
+        Cards.SetReset(true);
+        this.numMatches = 0;
+        ControlPanelFunctions.ClearGameCounter();
+    }
+
+    CheckForMatch(arrayIndex) {
+    
+        if (this.cardLocationToID[this.cardAAAIndex].element.id === this.cardLocationToID[this.cardZZZIndex].element.id) {
+            console.log("MATCH!")
+            Cards.ChangeCardImage(this.cardAAAIndex, this.REMOVE_CARD);
+            Cards.ChangeCardImage(this.cardZZZIndex, this.REMOVE_CARD);
+            this.cardAAAIndex = this.NONE;
+            this.cardZZZIndex = this.NONE;
+
+            this.numMatches++;
+
+            SoundControlButton.playMatchSound()
+        }
+    }
+
+    ChangeCardImage(card, action) {
+
+        switch(action) {
+            case this.REMOVE_CARD:
+                this.cardLocationToID[card].element.style.opacity = 0.1;
+                this.cardLocationToID[card].id = 0;
+                break;
+            case this.TURN_DOWN:
+                this.cardLocationToID[card].element.src = "assets/card_back_blue.jfif";
+                console.log("TURN DOWN  " + this.cardLocationToID[card].element.id);
+                break;
+            case this.TURN_UP:
+                this.cardLocationToID[card].element.src = this.cardLocationToID[card].img;
+                console.log("TURN UP  " + this.cardLocationToID[card].element.id);
+                break;
+            default:
+                console.log("You screwed up")
+                break;
+        }
+    }
+
+    CardClicked(arrayIndex) {
+
+        console.log("card " + arrayIndex + " id = " + this.cardLocationToID[arrayIndex].id)
+        if (this.cardLocationToID[arrayIndex].id === 0) return;
+
+        if (this.cardAAAIndex === this.NONE) {
+
+            if (this.cardZZZIndex === this.NONE) {                  // No cards chosen before this, make this card AAA, ZZZ is still NONE
+                this.cardAAAIndex = arrayIndex;
+
+                Cards.ChangeCardImage(this.cardAAAIndex, this.TURN_UP);
+            } else {                                                // One card is chosen already ZZZ->was.  Make this AAA, check 4 match
+                if (arrayIndex !== this.cardZZZIndex){              // Make sure the card wasn't already face up
+                    this.cardAAAIndex = arrayIndex;
+
+                    Cards.ChangeCardImage(this.cardAAAIndex, this.TURN_UP);
+        
+                    Cards.CheckForMatch(this.cardAAAIndex)
+                } else {                                            // Same card - Card was face up.  Now we just turn it down
+                    Cards.ChangeCardImage(this.cardZZZIndex, this.TURN_DOWN);
+                    this.cardZZZIndex = this.NONE;
+                }
+            }
+        }
+        else if (this.cardZZZIndex === this.NONE) {                 // One card is chosen already AAA->was.  Make this ZZZ, check 4 match
+            if (this.cardAAAIndex != arrayIndex) {                  // Make sure it doesn't already match a card facing up
+                this.cardZZZIndex = arrayIndex;
+
+                Cards.ChangeCardImage(this.cardZZZIndex, this.TURN_UP);
+
+                Cards.CheckForMatch(this.cardZZZIndex)
+            } else {                                                // The new selected card matches an up-facing AAA card.  So turn it down
+                Cards.ChangeCardImage(this.cardAAAIndex, this.TURN_DOWN);
+                this.cardAAAIndex = this.NONE;
+            }
+        }
+        else {                                                      // Two cards already chosen.  
+                if (arrayIndex === this.cardAAAIndex){              // if AAA was clicked when already face up, clear it
+                    Cards.ChangeCardImage(this.cardAAAIndex, this.TURN_DOWN);
+                    this.cardAAAIndex = this.NONE;
+
+                } else if (arrayIndex === this.cardZZZIndex){       // ELSE IF ZZZ was clicked when already face up, clear it
+                    Cards.ChangeCardImage(this.cardZZZIndex, this.TURN_DOWN);
+                    this.cardZZZIndex = this.NONE;
+                } else {                                            // ELSE neither click, so clear both old cards
+                    Cards.ChangeCardImage(this.cardAAAIndex, this.TURN_DOWN);
+                    Cards.ChangeCardImage(this.cardZZZIndex, this.TURN_DOWN);
+                    this.cardAAAIndex = arrayIndex;                 // New card becomes AAA with ZZZ empty
+                    this.cardZZZIndex = this.NONE;
+
+                    Cards.ChangeCardImage(this.cardAAAIndex, this.TURN_UP);
+                }
+        }
+        /*
+        ** Check if the game is over (i.e. number of matches equal to half the cards)
+        */
+        if (this.numMatches === (this.maxCards/2)) {
+            ControlPanelFunctions.UpdateTopScore()
+            Cards.Reset();
+            SoundControlButton.playApplause()
+        }
+    }
+
+    Shuffle() {
+        for (let i = 0; i < this.cardLocationToID.length; i++) {
+            let card = null;
+            let img = null;
+            let card_object = {element:card, image:img, id: Math.floor(i/2)+1}
+
+            this.cardLocationToID[i] = card_object;
+        }
+        for (let i = this.cardLocationToID.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = this.cardLocationToID[i];
+            this.cardLocationToID[i] = this.cardLocationToID[j];
+            this.cardLocationToID[j] = temp;
+        }
+    }
+}
 
 /*
 ** Set up the sound button object
@@ -160,230 +370,33 @@ let SoundControlButton      = new soundButton();
 control_panel_container.appendChild(SoundControlButton.sound_button);
 SoundControlButton.sound_button.addEventListener("click", function() {SoundControlButton.toggleSound()});
 
+let Cards = new CardsClass ();
 /*
 ** Establish the control panel
 */
-let ControlPanelFunctions = new ControlPannel();
+let ControlPanelFunctions = new ControlPanel();
 /*
 ** And wait for the user to start the game (startGame). by invoking "DEAL CARDS"
 */
 
 async function startGame() {
 
-    if (dealingInProgress) {
+    if (Cards.IsDealingInProgress()) {
         ControlPanelFunctions.logUserMessage("Please wait until after dealing completes")
         return;
     }
 
     ControlPanelFunctions.logUserMessage("Start Searching!")
 
-    if (tableReset === false)
-        resetCards();
+    if (!Cards.IsReset())
+        Cards.Reset();
 
-    tableReset = false;
+    Cards.SetReset(false);
 
     selectElement = document.querySelector('#card_selector');
-    maxCards = Number(selectElement.value);
-    cardLocationToID.length = maxCards;
+    Cards.SetMaxCards(Number(selectElement.value));
 
-    shuffle();
+    Cards.Shuffle();
 
-    await dealCards(maxCards)
-}
-
-function sleep(time){
-    return new Promise(resolve => {
-        setTimeout(resolve, time)
-    })  
-}
-
-async function dealCards(max_cards) {
-    if (maxCards === 0) {
-        ControlPanelFunctions.logUserMessage("Please select number of cards")
-        return;
-    }
-
-    ControlPanelFunctions.updateTimer(0);
-
-    console.log("Dealing start")
-    dealingInProgress = true;
-
-
-    for (let i=0; i < max_cards; i++) {
-        let card = document.createElement("img");
-        let card_id = cardLocationToID[i].id;
-
-        let card_image = `assets/clubs-${card_id}.png`;
-
-        card.src = cardBackSideImage;
-        card.id = `c${card_id}`
-        card.className = `card card${card_id}`;
-
-        let card_num = Number(maxCards)
-
-        switch(maxCards) {
-            case 18:
-                card.setAttribute("style","width:14%")
-                break;
-            case 30:
-                card.setAttribute("style","width:10%")
-                break;
-            case 50:
-            default:
-                card.setAttribute("style","width:8%")
-        }
-
-        card.addEventListener("click",function() {cardClicked(i)})
-
-        let div_container = document.getElementById("card_group")
-
-        await sleep(25);
-        div_container.appendChild(card);
-
-        cardLocationToID[i].element = card;
-        cardLocationToID[i].img     = card_image;
-    }
-    if (!tableReset) ControlPanelFunctions.launchNextSecondTimer();
-
-    console.log("Dealing done")
-    dealingInProgress = false;
-}
-
-function resetCards () {
-
-    ControlPanelFunctions.clearTimer()
-
-    console.log("Clearing a total of " + maxCards)
-    for (let i=0; i < maxCards; i++) {  console.log("clear " + i)
-        if (cardLocationToID[i].element != null) {
-            cardLocationToID[i].element.remove();
-            cardLocationToID[i] = null;
-        }
-    }
-    cardChoiceAAAIndex  = NONE;
-    cardChoiceZZZIndex = NONE;
-
-    tableReset = true;
-    numMatches = 0;
-    ControlPanelFunctions.ClearGameCounter();
-}
-
-function checkForMatch(arrayIndex) {
-   
-    if (cardLocationToID[cardChoiceAAAIndex].element.id === cardLocationToID[cardChoiceZZZIndex].element.id) {
-        console.log("MATCH!")
-        changeCardImage(cardChoiceAAAIndex, REMOVE_CARD);
-        changeCardImage(cardChoiceZZZIndex, REMOVE_CARD);
-        cardChoiceAAAIndex = NONE;
-        cardChoiceZZZIndex = NONE;
-
-        numMatches++;
-
-        SoundControlButton.playMatchSound()
-    }
-}
-
-function changeCardImage(card, action) {
-
-    switch(action) {
-        case REMOVE_CARD:
-            cardLocationToID[card].element.style.opacity = 0.1;
-            cardLocationToID[card].id = 0;
-            break;
-        case TURN_DOWN:
-            cardLocationToID[card].element.src = cardBackSideImage;
-            console.log("TURN DOWN  " + cardLocationToID[card].element.id);
-            break;
-        case TURN_UP:
-            cardLocationToID[card].element.src = cardLocationToID[card].img;
-            console.log("TURN UP  " + cardLocationToID[card].element.id);
-            break;
-        default:
-            console.log("You screwed up")
-            break;
-    }
-}
-
-function cardClicked(arrayIndex) {
-
-    console.log("card " + arrayIndex + " id = " + cardLocationToID[arrayIndex].id)
-    if (cardLocationToID[arrayIndex].id === 0) return;
-
-    if (cardChoiceAAAIndex === NONE) {
-
-        if (cardChoiceZZZIndex === NONE) {          // No cards chosen before this, make this card AAA, ZZZ is still NONE
-            cardChoiceAAAIndex = arrayIndex;
-
-            changeCardImage(cardChoiceAAAIndex, TURN_UP);
-        } else {                                    // One card is chosen already ZZZ->was.  Make this AAA, check 4 match
-            if (arrayIndex !== cardChoiceZZZIndex){ // Make sure the card wasn't already face up
-                cardChoiceAAAIndex = arrayIndex;
-
-                changeCardImage(cardChoiceAAAIndex, TURN_UP);
-    
-                checkForMatch(cardChoiceAAAIndex)
-            } else {                                // Same card - Card was face up.  Now we just turn it down
-                changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
-                cardChoiceZZZIndex = NONE;
-            }
-        }
-        if (cardChoiceAAAIndex !== NONE) console.log("Selected Card = " + cardLocationToID[cardChoiceAAAIndex].element.id);
-
-    }
-    else if (cardChoiceZZZIndex === NONE) {         // One card is chosen already AAA->was.  Make this ZZZ, check 4 match
-        if (cardChoiceAAAIndex != arrayIndex) {     // Make sure it doesn't already match a card facing up
-            cardChoiceZZZIndex = arrayIndex;
-
-            console.log("Selected Card = " + cardLocationToID[cardChoiceZZZIndex].element.id);
-
-            changeCardImage(cardChoiceZZZIndex, TURN_UP);
-
-            checkForMatch(cardChoiceZZZIndex)
-        } else {                                    // The new selected card matches an up-facing AAA card.  So turn it down
-            changeCardImage(cardChoiceAAAIndex, TURN_DOWN);
-            cardChoiceAAAIndex = NONE;
-        }
-    }
-    else {                                                  // Two cards already chosen.  
-            if (arrayIndex === cardChoiceAAAIndex){         // if AAA was clicked when already face up, clear it
-                changeCardImage(cardChoiceAAAIndex, TURN_DOWN);
-                cardChoiceAAAIndex = NONE;
-
-            } else if (arrayIndex === cardChoiceZZZIndex){  // ELSE IF ZZZ was clicked when already face up, clear it
-                changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
-                cardChoiceZZZIndex = NONE;
-            } else {                                         // ELSE neither click, so clear both old cards
-                changeCardImage(cardChoiceAAAIndex, TURN_DOWN);
-                changeCardImage(cardChoiceZZZIndex, TURN_DOWN);
-                cardChoiceAAAIndex = arrayIndex;             // New card becomes AAA with ZZZ empty
-                cardChoiceZZZIndex = NONE;
-
-                changeCardImage(cardChoiceAAAIndex, TURN_UP);
-            }
-    }
-    /*
-    ** Check if the game is over
-    */
-    if (numMatches === (maxCards/2)) {
-        ControlPanelFunctions.UpdateTopScore()
-        resetCards();
-        SoundControlButton.playApplause()
-    }
-}
-
-
-function shuffle() {
-    for (let i = 0; i < cardLocationToID.length; i++) {
-        let card = null;
-        let img = null;
-        let card_object = {element:card, image:img, id: Math.floor(i/2)+1}
-
-        cardLocationToID[i] = card_object;
-    }
-    for (let i = cardLocationToID.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = cardLocationToID[i];
-        cardLocationToID[i] = cardLocationToID[j];
-        cardLocationToID[j] = temp;
-    }
+    await Cards.Deal(Cards.GetMaxCards())
 }
