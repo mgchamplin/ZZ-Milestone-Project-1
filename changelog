@@ -1,0 +1,21 @@
+CHANGELOG: (dates unavailable)
+[Most recent to the oldest]
+
+- Updated ReadMe.md per homework requirements
+- Center status box a little better
+- Turn Card functions into an object. Trim card back
+- Change small deal from 16 to 18 cards
+- Switched cards around
+- More object-ification. Clean styling. Add Readme details
+- Clean up: Make SoundButton a class
+- Add transparency to matched cards, color styling
+- Change to 16,32,50. Added applause. Cleaned styling.
+- Added sound and fixed ghost card selection
+- Logic to hold off reset if dealing. Add match sound
+- Game board adjustments
+- Cleaned up bugs with the card selection logic
+- Added logic to successfully match / clear cards
+- Added shuffle, card selection and comparison stubbed
+- Added more cards. Have Deal & Reset functions + card count
+- Add flex box styling
+- Set background, added clubs, listener, spacings
