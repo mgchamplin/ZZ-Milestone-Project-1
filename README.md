@@ -1,9 +1,10 @@
-# ZZ-Milestone-Project-1
+# ZZ-Milestone-Project-1:
 
 Match Game Challenge project
 
-##Description
-Memory Match game is intended for a single person to challenge their short-term memory by turning cards over and looking for two-card matches.
+## Description:
+
+Memory Match game is intended for a single person to challenge their short-term memory by turning cards over and looking for two-card matches. When the game is started, a timer is kicked off so the player can record how much time it takes to track down all of the match pairs. There are three options for the amount of cards to play with (see features below)
 
 ### Features:
 
@@ -43,5 +44,14 @@ As we get older, our short-term memory slowly deteriorates. This game provides a
 
 - None noted.
 
-####### Technologies
-HTML and Javascript used. No special libraries
+####### Technologies:
+
+HTML and Javascript used. No special libraries used. There is no backend server involved. It runs completely in the user's browser. There is no installation necessary - just point your browser to the hosted site.
+
+######## Issues
+
+There are no known issues or bugs within this perfect match game. :)
+
+######### API
+
+There is no API for this game - it is an SPA product.
